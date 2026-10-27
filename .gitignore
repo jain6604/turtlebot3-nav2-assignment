@@ -1,0 +1,20 @@
+# ROS 2 / colcon
+build/
+install/
+log/
+.colcon/
+
+# Python and editors
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/
+
+# Local recordings and screenshots (add selected evidence deliberately)
+video/*.mp4
+screenshots/*.png
+
+# Secrets and machine-specific settings
+.env
+*.pem
+*.key
