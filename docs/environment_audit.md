@@ -11,9 +11,10 @@ Date: 27 October 2026 (IST)
 | ROS 2 / Gazebo / RViz | Not found on host PATH |
 | Docker | Not found on host PATH |
 | FFmpeg / OBS | Not found on host PATH |
-| WSL | Windows executable present, but `wsl --status` and `wsl -l -v` returned `Wsl/E_ACCESS_DENIED` |
+| WSL | WSL2 works when executed outside the file sandbox; default distribution is Ubuntu 26.04.1 LTS, stopped, kernel `6.18.33.2-microsoft-standard-WSL2` |
+| Ubuntu resources | 16 logical CPUs, 7.4 GiB RAM, 955 GiB free at `/` |
 | GitHub authentication | `gh auth status` reports the configured token invalid; no token was displayed |
 
 ## Consequence
 
-This machine is not currently capable of a truthful Gazebo/RViz validation or screen capture. Installing and running the selected Ubuntu/ROS stack requires that the owner restore WSL access (or provide an Ubuntu workstation). Publishing also requires re-authentication to GitHub. These are external authorization/administrator steps and were not bypassed.
+This machine is not currently capable of a truthful Gazebo/RViz validation or screen capture. WSL itself is available, but Ubuntu 26.04 is not the stable target selected for ROS 2 Humble/Gazebo Classic; a supported Ubuntu 22.04 WSL distribution (or a deliberately validated newer ROS/Gazebo combination) must be installed first. Publishing also requires re-authentication to GitHub. These are external authorization/administrator steps and were not bypassed.

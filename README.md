@@ -4,7 +4,7 @@ A reproducible ROS 2 project for the Antropi Robotics software-intern assignment
 
 ## Current verification status
 
-Project files and launch syntax have been prepared on **Windows 11**. This checkout has not yet executed Gazebo, RViz, Nav2, or the obstacle demonstration because the machine has no ROS installation and its WSL distribution is inaccessible (`Wsl/E_ACCESS_DENIED`). No video, screenshot, navigation result, or public repository URL is claimed until those checks have run.
+Project files and launch syntax have been prepared on Windows. This checkout has not yet executed Gazebo, RViz, Nav2, or the obstacle demonstration: the available WSL2 distribution is Ubuntu 26.04 with no ROS installation, while the selected stable Humble/Gazebo Classic target needs Ubuntu 22.04. No video, screenshot, navigation result, or public repository URL is claimed until those checks have run.
 
 The target, selected for stability and upstream support, is:
 
