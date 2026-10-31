@@ -1,62 +1,128 @@
-# Test protocol and evidence log
+# Test Protocol and Evidence Log
 
-Run the commands below only after the target Ubuntu/ROS environment is installed. Record real results in the table; do not replace the placeholders with expected output.
+This document records the setup, validation procedure, observed results and evidence for the Antropi Robotics TurtleBot3 Nav2 assignment.
 
-## Preflight
+Only tests actually performed are marked as passed.
+
+## 1. Environment
+
+- Operating System: Ubuntu 22.04 on WSL2
+- ROS 2: Humble
+- Simulator: Gazebo Classic 11
+- Robot: TurtleBot3 Burger
+- Navigation: ROS 2 Navigation2
+- Visualization: RViz2
+- Workspace: `~/robotics_ws`
+
+## 2. Preflight
+
+Source the ROS environment:
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/tb3_ws/install/setup.bash
+source ~/robotics_ws/install/setup.bash
 export TURTLEBOT3_MODEL=burger
-ros2 pkg prefix turtlebot3_gazebo
-ros2 pkg prefix turtlebot3_navigation2
 ```
 
-Expected: both package-prefix commands return installed paths.
-
-## Bringup and diagnostics
-
-Start `ros2 launch turtlebot3_nav2_assignment bringup.launch.py`. Do not start the diagnostic commands until Gazebo has had at least 45 seconds to initialize and the robot is visibly present. Then, in another terminal:
+Check installed packages:
 
 ```bash
-ros2 topic echo /clock --once
-ros2 topic echo /scan --once
-ros2 run tf2_ros tf2_echo map base_footprint
-ros2 lifecycle nodes
-ros2 action list | grep navigate_to_pose
+ros2 pkg prefix turtlebot3_gazebo
+ros2 pkg prefix turtlebot3_navigation2
+ros2 pkg prefix turtlebot3_nav2_assignment
 ```
 
-Expected: sim time advances; `/scan` contains ranges; TF resolves; Nav2 managed nodes are listed; `navigate_to_pose` exists. For each lifecycle node, verify `active` with `ros2 lifecycle get /NODE_NAME`.
+The package build completed successfully using:
 
-## Navigation test
+```bash
+cd ~/robotics_ws
+colcon build --symlink-install
+```
 
-1. In RViz, set **Fixed Frame** to `map` and add Map, LaserScan (`/scan`), TF, Global Costmap, Local Costmap, global path, local path, and RobotModel displays.
-2. Set a 2D initial pose if necessary.
-3. Send a reachable Nav2 goal in an open portion of the provided map.
-4. Observe the goal, global path, controller trajectory/local path, and collision-free robot movement.
-5. Capture a screenshot with RViz and Gazebo both visible.
+## 3. Bringup and Diagnostics
 
-## Obstacle-avoidance test
+The Gazebo simulation was launched using the TurtleBot3 world. The Nav2 navigation stack was subsequently started with the Humble Burger configuration and simulation time enabled.
 
-1. Identify an unobstructed part of the proposed route where the robot's laser can see the obstacle.
-2. Begin navigation to a goal beyond that point.
-3. While the robot is still at least 0.5 m from the chosen position, run:
+The following functionality was verified:
 
-   ```bash
-   ros2 run turtlebot3_nav2_assignment spawn_obstacle --x X --y Y --name demo_obstacle
-   ```
+- TurtleBot3 Burger spawned successfully in Gazebo.
+- `/clock`, `/scan`, `/odom` and robot TF data were available.
+- AMCL became active.
+- BT Navigator, Controller Server and Planner Server became active.
+- The `map` to `odom` transform was successfully resolved.
+- Navigation costmap topics were available.
 
-4. Confirm the red cylinder appears in Gazebo and a corresponding obstacle appears in the local costmap.
-5. Record whether Nav2 changes its local plan, steers around it, waits, or reports failure. Mark success only when it reaches the goal without collision.
+## 4. Navigation Test
 
-## Evidence record
+The following procedure was performed in RViz:
 
-| Check | Status | Actual output / file |
-| --- | --- | --- |
-| Dependencies found | PASS | Ubuntu 22.04 WSL2; ROS 2 Humble, Gazebo, RViz, TurtleBot3 and Nav2 installed |
-| Gazebo robot spawn | BLOCKED | `/spawn_entity` did not become available during controlled integration test |
-| Nav2 lifecycle active | PARTIAL PASS | Localization manager became active; navigation manager configured planner/controller but activation waited for missing robot TF |
-| TF and scan | NOT RUN | — |
-| Goal reached | NOT RUN | — |
-| Obstacle avoidance | NOT RUN | — |
-| Demo MP4 reviewed | NOT RUN | — |
+1. Loaded the map and initialized the robot pose using 2D Pose Estimate.
+2. Verified that localization and navigation components were active.
+3. Sent reachable navigation goals using Nav2 Goal.
+4. Observed navigation feedback.
+
+**Observed result:** Multiple navigation goals were successfully reached. The navigation feedback showed `reached`, distance remaining `0.00 m`, and zero recoveries.
+
+## 5. Custom Obstacle and Costmap Test
+
+The assignment-specific obstacle helper was executed:
+
+```bash
+ros2 run turtlebot3_nav2_assignment spawn_obstacle --x 2.5 --y 0.0
+```
+
+**Observed result:**
+
+- The helper reported successful spawning of `demo_obstacle` at `(2.50, 0.00)`.
+- The obstacle appeared in the Gazebo Models panel.
+- The local costmap topic `/local_costmap/costmap` was available.
+- The local costmap was successfully displayed in RViz.
+
+**Important limitation:** A controlled test demonstrating the robot changing its trajectory and successfully avoiding the spawned obstacle has not yet been conclusively completed. Obstacle spawning and costmap visualization must not be treated as proof of successful obstacle avoidance.
+
+## 6. Obstacle-Avoidance Test Procedure
+
+To complete the remaining validation:
+
+1. Identify a reachable navigation route that passes near the obstacle.
+2. Send a goal beyond the obstacle.
+3. Spawn the obstacle at a suitable position along the route, within the robot's sensor range.
+4. Observe the LaserScan and local costmap.
+5. Check whether the controller changes its trajectory or Nav2 replans.
+6. Confirm the robot reaches the goal without colliding with the obstacle.
+
+Mark this test as passed only after observing successful collision-free avoidance.
+
+## 7. Evidence Log
+
+| Check | Status | Evidence |
+|---|---|---|
+| ROS 2 and package build | PASS | Successful colcon build |
+| Gazebo robot spawn | PASS | `01_gazebo_obstacle.png` |
+| Nav2 lifecycle activation | PASS | RViz navigation screenshot |
+| AMCL localization | PASS | Active lifecycle state |
+| TF availability | PASS | `map` to `odom` transform resolved |
+| Navigation goals | PASS | `02_rviz_navigation_reached.png` |
+| Custom obstacle spawning | PASS | `01_gazebo_obstacle.png` |
+| Local costmap visualization | PASS | `03_rviz_local_costmap.png` |
+| Controlled obstacle avoidance | PENDING | Not conclusively demonstrated |
+| Final demo video | PENDING | To be recorded |
+
+## 8. Troubleshooting
+
+- If Gazebo does not open, source ROS 2 and check WSLg graphical support.
+- If `/spawn_entity` is unavailable, allow Gazebo to initialize fully.
+- If Nav2 nodes remain inactive, inspect lifecycle states and simulation time.
+- If localization fails, initialize the robot pose using RViz 2D Pose Estimate.
+- If an obstacle does not appear in the costmap, inspect LaserScan data and obstacle position.
+
+## 9. Submission Evidence
+
+The following screenshots have been captured:
+
+- `01_gazebo_obstacle.png`
+- `02_rviz_navigation_reached.png`
+- `03_rviz_local_costmap.png`
+
+The final 1–2 minute Gazebo and RViz demonstration video remains to be recorded.
+

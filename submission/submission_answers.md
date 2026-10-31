@@ -1,28 +1,36 @@
-# Submission answers — draft pending live validation
+# Submission Answers — Antropi Robotics
 
-These answers are intentionally conservative. Replace only the bracketed fields after the real run, and use the actual repository and video URLs.
+## 1. Describe your approach
 
-## Describe your approach
+I used ROS 2 Humble with the TurtleBot3 Burger simulation in Gazebo Classic and the upstream ROS 2 Navigation2 stack. I created an assignment-specific ROS 2 package containing a launch file to bring up the simulation and navigation stack, along with a custom SDF-based obstacle-spawning utility.
 
-I used ROS 2 Humble with the supported TurtleBot3 Burger Gazebo simulation and the upstream TurtleBot3 Navigation2 stack. I created a small assignment package that launches the simulator and Nav2 together, plus an SDF-based obstacle tool to make the local-obstacle test repeatable. The package built successfully, and the controlled bring-up started Gazebo, RViz, AMCL, map serving, and the core Nav2 components. I will only state that I inspected robot telemetry or sent a `NavigateToPose` goal after the robot-spawn test is complete.
+I configured the Burger-specific Nav2 parameters and simulation time, built the package using colcon, and tested localization and autonomous navigation through RViz.
 
-## How is autonomous navigation configured?
+## 2. How is autonomous navigation configured?
 
-Gazebo provides `/clock`, odometry, transforms, and laser data. AMCL localizes the robot on the map, and Nav2's planner, controller, behavior tree navigator, recovery behaviors, and lifecycle manager handle the goal. I verified that the map server, AMCL, planner, controller, behavior server, BT navigator, and costmaps launched; [ADD ACTUAL VERIFIED TF / SCAN / GOAL RESULTS AFTER THE FINAL RUN].
+Gazebo provides the simulated environment, laser scan data, odometry and robot transforms. AMCL estimates the robot's position on the map, while Nav2 uses its planner, controller, behavior tree navigator and costmaps to execute navigation goals.
 
-## How did you demonstrate obstacle handling?
+I verified that the relevant Nav2 lifecycle nodes became active, initialized the robot pose in RViz, and successfully sent multiple navigation goals. The navigation feedback confirmed goal completion with zero distance remaining.
 
-The project includes a red cylinder with collision and laser geometry and a repeatable ROS 2 spawn helper. The final demonstration is pending robot-spawn recovery; after that run, I will report only the observed local-costmap response and final goal result.
+## 3. How did you demonstrate obstacle handling?
 
-## Challenge and resolution
+I developed a custom obstacle-spawning utility that creates a physical, laser-visible cylinder in Gazebo. I successfully spawned the obstacle at the specified coordinates and verified that the local costmap was available and displayed in RViz.
 
-The initial machine had no ROS environment. I installed the supported Ubuntu 22.04/ROS 2 Humble toolchain onto a D:-backed WSL distribution, built the package, and found that the upstream Nav2 launch needs an explicit Burger parameter file when included by another launch file. I corrected that wrapper configuration. The remaining issue is Gazebo factory-service readiness, which I am diagnosing before claiming robot motion or obstacle avoidance.
+A controlled test demonstrating successful collision-free obstacle avoidance has not yet been conclusively completed. The obstacle spawning and costmap visualization were verified independently.
 
-## Key learning
+## 4. What challenges did you face and how did you resolve them?
 
-I learned how Nav2 separates global map-based planning from local sensor-driven control, why AMCL publishes the `map -> odom` correction, and how local costmaps turn live laser observations into avoidance constraints.
+One of the main challenges was setting up a compatible ROS 2 development environment on Windows using Ubuntu 22.04 through WSL2. I configured ROS 2 Humble, Gazebo Classic, TurtleBot3 and Nav2.
 
-## Links
+I also encountered issues with Gazebo's entity-spawning service, environment variables and Nav2 startup configuration. I resolved the robot-spawning and configuration issues, ensured the correct TurtleBot3 Burger model was selected, and successfully brought up the simulation and navigation stack.
 
-- Repository: [PENDING — authenticate GitHub and publish]
-- Demo video: [PENDING — record and review a genuine run]
+## 5. What did you learn from this assignment?
+
+I gained practical experience with ROS 2, Gazebo simulation and the Nav2 navigation framework. I learned how AMCL handles localization, how Nav2 separates global planning from local control, and how costmaps represent obstacles using sensor information.
+
+I also gained experience troubleshooting ROS 2 launch configurations, lifecycle nodes, TF transforms, simulation time and multi-terminal workflows in a WSL2 environment.
+
+## 6. Project Links
+
+- **GitHub Repository:** https://github.com/jain6604/turtlebot3-nav2-assignment
+- **Demo Video:** To be added after recording and uploading the final demonstration.

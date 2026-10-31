@@ -1,91 +1,151 @@
 # TurtleBot3 Nav2 Autonomous Navigation
 
-A reproducible ROS 2 project for the Antropi Robotics software-intern assignment. It runs a TurtleBot3 Burger in the official TurtleBot3 Gazebo world and starts the official Navigation2 configuration. The supplied helper spawns a physical, laser-visible obstacle so Nav2 must update its local costmap and replan or steer around it.
+A ROS 2 project developed for the Antropi Robotics Software Intern assignment. The project launches a TurtleBot3 Burger in the official Gazebo world and uses the ROS 2 Navigation2 (Nav2) stack for autonomous navigation.
 
-## Current verification status
+The project uses upstream TurtleBot3 and Nav2 packages, with an assignment-specific launch file and a custom obstacle-spawning helper.
 
-The target Ubuntu 22.04 WSL2 environment, installed on D:, has ROS 2 Humble, Gazebo Classic, RViz2, TurtleBot3, Nav2, and colcon installed. This package has built successfully and a controlled launch started Gazebo, RViz, AMCL, the map server, Nav2 lifecycle managers, planner, controller, behavior server, BT navigator, and costmaps. The robot spawn service did not become ready in that controlled test, so robot TF/odometry, a navigation goal, obstacle avoidance, screenshots, video, and a public repository are **not yet verified**.
+## Verification Status
 
-The target, selected for stability and upstream support, is:
+The following functionality has been successfully verified:
 
-| Component | Version / choice |
-| --- | --- |
-| Host | Ubuntu 22.04 in WSL2 with WSLg, or native Ubuntu 22.04 |
-| ROS 2 | Humble Hawksbill |
-| Simulator | Gazebo Classic 11 (`gazebo_ros_pkgs`) |
+- ROS 2 Humble environment and package build.
+- TurtleBot3 Burger spawned in Gazebo Classic.
+- Nav2 and AMCL lifecycle nodes became active.
+- Planner, controller and BT Navigator became active.
+- Multiple navigation goals were successfully reached.
+- A custom obstacle named `demo_obstacle` was spawned in Gazebo at coordinates `(2.5, 0.0)`.
+- The RViz local costmap was displayed using `/local_costmap/costmap`.
+
+**Important:** Obstacle avoidance has not yet been conclusively demonstrated through a controlled navigation test. Obstacle spawning and local costmap visualization were verified separately from successful goal navigation.
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Operating System | Ubuntu 22.04 on WSL2 |
+| ROS | ROS 2 Humble |
+| Simulator | Gazebo Classic 11 |
 | Robot | TurtleBot3 Burger |
-| Navigation | upstream `turtlebot3_navigation2` / Nav2 |
+| Navigation | ROS 2 Navigation2 |
+| Visualization | RViz2 |
+| Build System | Colcon |
 
 ## Prerequisites
 
-Use Ubuntu 22.04 and source ROS before every terminal session:
+- Ubuntu 22.04 with ROS 2 Humble installed.
+- Gazebo Classic and TurtleBot3 packages.
+- Nav2 and RViz2.
+- Python 3 and colcon.
+- WSLg for graphical applications when using WSL2.
+
+## Installation and Build
+
+Source ROS 2:
 
 ```bash
 source /opt/ros/humble/setup.bash
 export TURTLEBOT3_MODEL=burger
 ```
 
-Install the documented dependencies and build this package:
+Install the required packages if they are not already installed:
 
 ```bash
 sudo apt update
-sudo apt install -y ros-humble-turtlebot3-gazebo ros-humble-turtlebot3-navigation2 \
-  ros-humble-nav2-bringup ros-humble-gazebo-ros-pkgs python3-colcon-common-extensions
-mkdir -p ~/tb3_ws/src
-cd ~/tb3_ws/src
-git clone <REPOSITORY_URL> turtlebot3-nav2-autonomous-navigation
-cd ..
+sudo apt install -y ros-humble-turtlebot3-gazebo \
+ros-humble-turtlebot3-navigation2 \
+ros-humble-nav2-bringup \
+ros-humble-gazebo-ros-pkgs \
+python3-colcon-common-extensions
+```
+
+Create the workspace and clone the repository:
+
+```bash
+mkdir -p ~/robotics_ws/src
+cd ~/robotics_ws/src
+
+git clone https://github.com/jain6604/turtlebot3-nav2-assignment.git
+```
+
+Build the package:
+
+```bash
+cd ~/robotics_ws
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-If using WSL, confirm `wsl --status` succeeds and that WSLg can open GUI applications before installing packages. A Windows-only terminal cannot run this Gazebo/RViz configuration.
+## Running the Simulation
 
-## Run
-
-Terminal 1 starts Gazebo and Nav2 (including RViz):
+Open a terminal and run:
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/tb3_ws/install/setup.bash
+source ~/robotics_ws/install/setup.bash
 export TURTLEBOT3_MODEL=burger
+
 ros2 launch turtlebot3_nav2_assignment bringup.launch.py
 ```
 
-On a slower WSLg startup, increase the configurable wait before Nav2 starts:
+The launch file starts the TurtleBot3 Gazebo world and brings up the configured Nav2 navigation stack.
+
+If startup is slow, increase the Nav2 startup delay:
 
 ```bash
 ros2 launch turtlebot3_nav2_assignment bringup.launch.py nav2_delay:=30.0
 ```
 
-Terminal 2 adds a laser-visible cylinder after the robot has started moving toward a goal:
+## Spawning the Custom Obstacle
+
+After the simulation has started, open another terminal:
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/tb3_ws/install/setup.bash
-ros2 run turtlebot3_nav2_assignment spawn_obstacle --x 0.20 --y 1.05 --name demo_obstacle
+source ~/robotics_ws/install/setup.bash
+
+ros2 run turtlebot3_nav2_assignment spawn_obstacle --x 2.5 --y 0.0
 ```
 
-In RViz, use **2D Pose Estimate** if the robot is not localized, then select **Nav2 Goal** and click a reachable goal that crosses the cylinder's vicinity. Keep **LaserScan**, **Global Costmap**, **Local Costmap**, and both paths visible. See [docs/test_protocol.md](docs/test_protocol.md) for the exact validation procedure.
+This spawns the custom demo obstacle in Gazebo.
+
+## Autonomous Navigation
+
+In RViz:
+
+1. Wait for the map and robot data to load.
+2. Use **2D Pose Estimate** to initialize the robot's position if necessary.
+3. Select **Nav2 Goal**.
+4. Click a reachable destination on the map.
+5. Observe the robot's navigation and the costmap visualization.
+
+The obstacle avoidance demonstration should be evaluated separately by confirming that the robot detects an obstacle and follows a collision-free alternative trajectory.
 
 ## Architecture
 
-Gazebo publishes `/clock`, `/scan`, odometry, and robot TF. `turtlebot3_navigation2` runs AMCL, planner, controller, behavior, smoother, BT navigator, and lifecycle manager. AMCL estimates `map -> odom`; the robot state publisher and Gazebo provide `odom -> base_footprint` and sensor frames. Nav2 uses the static map plus laser observations in global and local costmaps to choose and safely execute a path.
+- **Gazebo:** Simulates the TurtleBot3 environment and sensors.
+- **AMCL:** Estimates the robot's position on the map.
+- **Nav2 Planner:** Computes a path to the navigation goal.
+- **Nav2 Controller:** Executes the planned path.
+- **Behavior Tree Navigator:** Coordinates the navigation task.
+- **Costmaps:** Represent obstacles and environmental information for navigation.
+- **RViz2:** Visualizes the robot, map, navigation status and costmaps.
 
-This repository deliberately delegates navigation algorithms to supported upstream packages. The assignment-specific package supplies one repeatable launch point, an SDF obstacle, and verification materials.
+The project relies on upstream ROS 2 and Nav2 algorithms rather than implementing custom navigation algorithms.
 
-## Evidence and recording
+## Evidence and Documentation
 
-Save only authentic, reviewed evidence under `screenshots/` and the final recording at `video/demo.mp4` (the MP4 is ignored by default to avoid accidentally publishing a large file). The timed narration, shot list, and checklist are in [video/](video/). Do not state that obstacle avoidance succeeded unless the actual run shows a changing local path or controller trajectory and collision-free motion.
+The project includes documentation describing the environment, testing procedure and assignment responses.
+
+Screenshots and the final demonstration recording are maintained separately as submission evidence. Only claim functionality that has been demonstrated and verified.
 
 ## Troubleshooting
 
-- `Unable to communicate with master` / no windows: source the ROS setup, check `echo $DISPLAY`, and verify WSLg or a native Ubuntu desktop.
-- `/spawn_entity` is absent: allow Gazebo to fully initialize, then inspect `ros2 service list | grep spawn_entity` and the latest `~/.ros/log/` Gazebo log before changing Nav2 parameters.
-- Lifecycle nodes do not become active: inspect `ros2 lifecycle nodes` and `ros2 lifecycle get /<node>`; confirm `use_sim_time` and `/clock`.
-- Robot does not localize: set a 2D initial pose in RViz near its spawn point and ensure the map matches `turtlebot3_world`.
-- Robot ignores the new obstacle: confirm `ros2 topic echo /scan --once` detects it, use a location within laser range, and watch the local costmap.
+- **Gazebo does not open:** Check ROS environment sourcing and WSLg graphical support.
+- **Robot does not spawn:** Check Gazebo startup and the `/spawn_entity` service.
+- **Nav2 nodes are inactive:** Inspect lifecycle states and verify simulation time.
+- **Robot does not localize:** Set an initial pose using RViz's 2D Pose Estimate tool.
+- **Obstacle does not appear in the costmap:** Check laser scan data, obstacle position and costmap configuration.
 
-## License and attribution
+## License and Attribution
 
-The assignment glue code is MIT licensed. TurtleBot3, Gazebo, ROS 2, and Nav2 remain subject to their upstream licenses. See the upstream package documentation for their assets and configuration.
+Assignment-specific code is provided under the MIT License. ROS 2, TurtleBot3, Gazebo and Nav2 remain subject to their respective upstream licenses.
