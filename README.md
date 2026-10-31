@@ -4,7 +4,7 @@ A reproducible ROS 2 project for the Antropi Robotics software-intern assignment
 
 ## Current verification status
 
-Project files and launch syntax have been prepared on Windows. This checkout has not yet executed Gazebo, RViz, Nav2, or the obstacle demonstration: the available WSL2 distribution is Ubuntu 26.04 with no ROS installation, while the selected stable Humble/Gazebo Classic target needs Ubuntu 22.04. No video, screenshot, navigation result, or public repository URL is claimed until those checks have run.
+The target Ubuntu 22.04 WSL2 environment, installed on D:, has ROS 2 Humble, Gazebo Classic, RViz2, TurtleBot3, Nav2, and colcon installed. This package has built successfully and a controlled launch started Gazebo, RViz, AMCL, the map server, Nav2 lifecycle managers, planner, controller, behavior server, BT navigator, and costmaps. The robot spawn service did not become ready in that controlled test, so robot TF/odometry, a navigation goal, obstacle avoidance, screenshots, video, and a public repository are **not yet verified**.
 
 The target, selected for stability and upstream support, is:
 
@@ -52,6 +52,12 @@ export TURTLEBOT3_MODEL=burger
 ros2 launch turtlebot3_nav2_assignment bringup.launch.py
 ```
 
+On a slower WSLg startup, increase the configurable wait before Nav2 starts:
+
+```bash
+ros2 launch turtlebot3_nav2_assignment bringup.launch.py nav2_delay:=30.0
+```
+
 Terminal 2 adds a laser-visible cylinder after the robot has started moving toward a goal:
 
 ```bash
@@ -75,6 +81,7 @@ Save only authentic, reviewed evidence under `screenshots/` and the final record
 ## Troubleshooting
 
 - `Unable to communicate with master` / no windows: source the ROS setup, check `echo $DISPLAY`, and verify WSLg or a native Ubuntu desktop.
+- `/spawn_entity` is absent: allow Gazebo to fully initialize, then inspect `ros2 service list | grep spawn_entity` and the latest `~/.ros/log/` Gazebo log before changing Nav2 parameters.
 - Lifecycle nodes do not become active: inspect `ros2 lifecycle nodes` and `ros2 lifecycle get /<node>`; confirm `use_sim_time` and `/clock`.
 - Robot does not localize: set a 2D initial pose in RViz near its spawn point and ensure the map matches `turtlebot3_world`.
 - Robot ignores the new obstacle: confirm `ros2 topic echo /scan --once` detects it, use a location within laser range, and watch the local costmap.

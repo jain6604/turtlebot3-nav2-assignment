@@ -16,7 +16,7 @@ Expected: both package-prefix commands return installed paths.
 
 ## Bringup and diagnostics
 
-Start `ros2 launch turtlebot3_nav2_assignment bringup.launch.py`, then in another terminal:
+Start `ros2 launch turtlebot3_nav2_assignment bringup.launch.py`. Do not start the diagnostic commands until Gazebo has had at least 45 seconds to initialize and the robot is visibly present. Then, in another terminal:
 
 ```bash
 ros2 topic echo /clock --once
@@ -53,9 +53,9 @@ Expected: sim time advances; `/scan` contains ranges; TF resolves; Nav2 managed 
 
 | Check | Status | Actual output / file |
 | --- | --- | --- |
-| Dependencies found | NOT RUN | WSL unavailable during preparation |
-| Gazebo robot spawn | NOT RUN | — |
-| Nav2 lifecycle active | NOT RUN | — |
+| Dependencies found | PASS | Ubuntu 22.04 WSL2; ROS 2 Humble, Gazebo, RViz, TurtleBot3 and Nav2 installed |
+| Gazebo robot spawn | BLOCKED | `/spawn_entity` did not become available during controlled integration test |
+| Nav2 lifecycle active | PARTIAL PASS | Localization manager became active; navigation manager configured planner/controller but activation waited for missing robot TF |
 | TF and scan | NOT RUN | — |
 | Goal reached | NOT RUN | — |
 | Obstacle avoidance | NOT RUN | — |
